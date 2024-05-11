@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 images:
-- name: quay.io/argoprojlabs/argocd-image-updater
+- name: ghcr.io/kyori19/argocd-image-updater
   newTag: v0.12.2
 
 bases:

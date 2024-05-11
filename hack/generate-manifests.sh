@@ -14,16 +14,16 @@ IMAGE_TAG="${IMAGE_TAG:-}"
 
 # if the tag has not been declared, and we are on a release branch, use the VERSION file.
 if [ "$IMAGE_TAG" = "" ]; then
-  branch=$(git rev-parse --abbrev-ref HEAD || true)
-  if [[ $branch = release-* ]]; then
+#  branch=$(git rev-parse --abbrev-ref HEAD || true)
+#  if [[ $branch = release-* ]]; then
     pwd
     IMAGE_TAG=v$(cat $SRCROOT/VERSION)
-  fi
+#  fi
 fi
 # otherwise, use latest
-if [ "$IMAGE_TAG" = "" ]; then
-  IMAGE_TAG=latest
-fi
+#if [ "$IMAGE_TAG" = "" ]; then
+#  IMAGE_TAG=latest
+#fi
 
 cd ${SRCROOT}/manifests/base && ${KUSTOMIZE} edit set image ${IMAGE_NAMESPACE}/argocd-image-updater:${IMAGE_TAG}
 cd ${SRCROOT}/manifests/base && ${KUSTOMIZE} build . > ${TEMPFILE}
