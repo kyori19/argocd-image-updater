@@ -53,6 +53,7 @@ type RegistryClient interface {
 	ManifestForTag(ctx context.Context, tagStr string) (distribution.Manifest, error)
 	ManifestForDigest(ctx context.Context, dgst digest.Digest) (distribution.Manifest, error)
 	TagMetadata(ctx context.Context, manifest distribution.Manifest, opts *options.ManifestOptions) (*tag.TagInfo, error)
+	DescriptorForTag(ctx context.Context, tagStr string) (distribution.Descriptor, error)
 }
 
 type NewRegistryClient func(*RegistryEndpoint, string, string) (RegistryClient, error)
@@ -425,6 +426,13 @@ func TagInfoFromReferences(ctx context.Context, client *registryClient, opts *op
 	}
 
 	return ti, nil
+}
+
+// DescriptorForTag returns a descriptor for a given tag using HTTP HEAD request.
+// This is more efficient than ManifestForTag when only the digest is needed,
+// as it avoids downloading the full manifest content.
+func (clt *registryClient) DescriptorForTag(ctx context.Context, tagStr string) (distribution.Descriptor, error) {
+	return clt.regClient.Tags(ctx).Get(ctx, tagStr)
 }
 
 // Implementation of ping method to initialize the challenge list
