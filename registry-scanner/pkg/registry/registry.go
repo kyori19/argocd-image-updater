@@ -95,6 +95,26 @@ func (ep *RegistryEndpoint) GetTags(ctx context.Context, img *image.ContainerIma
 		return tagList, nil
 	}
 
+	// For digest strategy, use HTTP HEAD request to get the digest efficiently.
+	// This avoids downloading the full manifest content.
+	if vc.Strategy == image.StrategyDigest {
+		if len(tags) != 1 {
+			return nil, fmt.Errorf("expected exactly one tag for digest strategy, got %d", len(tags))
+		}
+		tagStr := tags[0]
+		logCtx.Tracef("Using HTTP HEAD request for digest strategy on tag %s", tagStr)
+
+		desc, err := regClient.DescriptorForTag(ctx, tagStr)
+		if err != nil {
+			logCtx.Errorf("Error fetching descriptor for %s:%s: %v", nameInRegistry, tagStr, err)
+			return nil, err
+		}
+
+		imgTag := tag.NewImageTag(tagStr, time.Time{}, desc.Digest.String())
+		tagList.Add(imgTag)
+		return tagList, nil
+	}
+
 	sem := semaphore.NewWeighted(int64(MaxMetadataConcurrency))
 	tagListLock := &sync.RWMutex{}
 
@@ -163,12 +183,7 @@ func (ep *RegistryEndpoint) GetTags(ctx context.Context, img *image.ContainerIma
 			}
 
 			logCtx.Tracef("Found date %s", ti.CreatedAt.String())
-			var imgTag *tag.ImageTag
-			if vc.Strategy == image.StrategyDigest {
-				imgTag = tag.NewImageTag(tagStr, ti.CreatedAt, fmt.Sprintf("sha256:%x", ti.Digest))
-			} else {
-				imgTag = tag.NewImageTag(tagStr, ti.CreatedAt, "")
-			}
+			imgTag := tag.NewImageTag(tagStr, ti.CreatedAt, "")
 			tagListLock.Lock()
 			tagList.Add(imgTag)
 			tagListLock.Unlock()

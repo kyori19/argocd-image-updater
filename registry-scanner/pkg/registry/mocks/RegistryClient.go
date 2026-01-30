@@ -20,6 +20,35 @@ type RegistryClient struct {
 	mock.Mock
 }
 
+// DescriptorForTag provides a mock function with given fields: ctx, tagStr
+func (_m *RegistryClient) DescriptorForTag(ctx context.Context, tagStr string) (distribution.Descriptor, error) {
+	ret := _m.Called(ctx, tagStr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DescriptorForTag")
+	}
+
+	var r0 distribution.Descriptor
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (distribution.Descriptor, error)); ok {
+		return rf(ctx, tagStr)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) distribution.Descriptor); ok {
+		r0 = rf(ctx, tagStr)
+	} else {
+		r0 = ret.Get(0).(distribution.Descriptor)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, tagStr)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+
 // ManifestForDigest provides a mock function with given fields: ctx, dgst
 func (_m *RegistryClient) ManifestForDigest(ctx context.Context, dgst digest.Digest) (distribution.Manifest, error) {
 	ret := _m.Called(ctx, dgst)

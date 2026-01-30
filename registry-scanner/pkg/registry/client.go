@@ -53,6 +53,7 @@ type RegistryClient interface {
 	ManifestForTag(ctx context.Context, tagStr string) (distribution.Manifest, error)
 	ManifestForDigest(ctx context.Context, dgst digest.Digest) (distribution.Manifest, error)
 	TagMetadata(ctx context.Context, manifest distribution.Manifest, opts *options.ManifestOptions) (*tag.TagInfo, error)
+	DescriptorForTag(ctx context.Context, tagStr string) (distribution.Descriptor, error)
 }
 
 type NewRegistryClient func(*RegistryEndpoint, string, string) (RegistryClient, error)
@@ -356,6 +357,13 @@ func (clt *registryClient) TagMetadata(ctx context.Context, manifest distributio
 // TagInfoFromReferences is a helper method to retrieve metadata for a given
 // list of references. It will return the most recent pushed manifest from the
 // list of references.
+// DescriptorForTag returns a descriptor for a given tag using HTTP HEAD request.
+// This is more efficient than ManifestForTag when only the digest is needed,
+// as it avoids downloading the full manifest content.
+func (clt *registryClient) DescriptorForTag(ctx context.Context, tagStr string) (distribution.Descriptor, error) {
+	return clt.regClient.Tags(ctx).Get(ctx, tagStr)
+}
+
 func TagInfoFromReferences(ctx context.Context, client *registryClient, opts *options.ManifestOptions, ti *tag.TagInfo, references []distribution.Descriptor) (*tag.TagInfo, error) {
 	logCtx := log.LoggerFromContext(ctx)
 	var ml []distribution.Descriptor
